@@ -1,0 +1,26 @@
+---
+# Tasks file for mariadb
+- name: Hash mail user password
+  command:
+    argv:
+     - doveadm
+     - pw 
+     - -p
+     - "{{ mail_user_pass }}"
+     - -s
+     - SHA512-CRYPT
+  register: mail_user_hash_output
+  become: true
+
+- name: Copy mail config
+  template:
+    src: templates/config.j2
+    dest: /tmp/config.sql
+
+- name: Import mail config
+  command: mysql --execute="source /tmp/config.sql;"
+
+- name: Delete mail config
+  file:
+    state: absent
+    path: /tmp/config.sql

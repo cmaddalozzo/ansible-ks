@@ -1,0 +1,19 @@
+---
+# Tasks file for unbound (dns)
+- name: Install packages
+  apt:
+    state: latest
+    pkg:
+      - unbound
+      - openresolv
+    update_cache: yes
+
+- name: Add openresolv conf
+  copy:
+    src: files/resolvconf.conf
+    dest: /etc/resolvconf.conf
+  register: copy_openresolv_conf
+
+- name: Update resolve.conf
+  command: resolvconf -u
+  when: copy_openresolv_conf.changed

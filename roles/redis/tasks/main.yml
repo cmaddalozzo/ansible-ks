@@ -1,0 +1,8 @@
+---
+# Redis tasks
+- name: Install packages
+  apt:
+    state: latest
+    pkg:
+      - redis-server
+    update_cache: yes

@@ -1,0 +1,7 @@
+[servers]
+198.245.50.125
+[all:vars]
+ansible_connection=paramiko
+ansible_user=ubuntu
+ansible_ssh_private_key_file=/Users/cmadd/.ssh/id_rsa_ks
+ansible_python_interpreter=/usr/bin/python3

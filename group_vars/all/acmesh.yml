@@ -1,0 +1,235 @@
+# The user on the system that acme.sh will run as. Keep in mind this user
+# needs to already exist, this role will not create it.
+acme_sh_become_user: "root"
+
+# acme.sh package dependencies. The default values are for Debian / Ubuntu.
+# For CentOS and Fedora you can replace "cron" with "crond".
+acme_sh_dependencies: ["cron", "git", "wget"]
+
+# The acme.sh repo to clone.
+acme_sh_git_url: "https://github.com/acmesh-official/acme.sh"
+
+# The branch, tag or commit that will be cloned.
+acme_sh_git_version: "master"
+
+# By default if you were to clone this repo now and then 6 months from now you
+# cloned it again, it will stick with the old master version from 6 months ago.
+# If you want to pull the latest master version on every run, set this to True.
+acme_sh_git_update: False
+
+# Where will this repo get cloned to?
+acme_sh_git_clone_dest: "/usr/local/src/acme.sh"
+
+# When enabled, acme.sh will upgrade itself to the latest version which is
+# separate from updating the git repo. That's because acme.sh installs itself
+# with an installer after cloning the source code.
+#
+# Enabling it could be good to get the latest release which may have bug fixes
+# but keep in mind if you do this, you may get different results per run. I
+# recommend occasionally setting this to True but keeping it disabled usually.
+acme_sh_upgrade: False
+
+# When enabled the cloned source code, installation path, log files and renewal
+# cron jobs will be removed.
+#
+# Installed certificates will not be removed. If you want to remove the installed
+# certificates there is another option for that which we'll cover later.
+acme_sh_uninstall: False
+
+# When creating an initial Let's Encrypt account, you can optionally supply an
+# email address. By default this isn't set, but feel free to add your email
+# address in if you want. If you do set it, you'll get emailed when your
+# certificates are within 20 days of expiring.
+#
+# I highly recommend setting this because if all goes as planned you'll never
+# get emailed unless acme.sh malfunctioned and failed to renew a certificate.
+acme_sh_account_email: "curtis@maddalozzo.ca"
+
+# Certificates will be renewed through an acme.sh managed cron job. By default
+# acme.sh uses 60 days for each renewal attempt, but I've chosen to go with 30
+# by default to give 1 extra attempt in case something unexpected happens.
+#
+# Certificates that don't need to be renewed will be skipped by acme.sh, so
+# it's all good. It's also worth mentioning this value cannot be > 60 days which
+# is a limit enforced by acme.sh, this role does not double check the value.
+acme_sh_renew_time_in_days: 30
+
+# The base path where certificates will be copied into. If you're familiar with
+# acme.sh, this is for the certificates generated with --install-cert.
+#
+# This is the final destination for your certificates and the user you've chosen
+# will need write access to this path. This path will end up being having its
+# owner:group set to the acme_sh_become_user's value.
+acme_sh_copy_certs_to_path: "/etc/ssl/ansible"
+
+# At the end of the run, an Ansible debug message will print out a list of
+# domains that have valid SSL certificates along with their expiration dates.
+# You can disable this by setting it to False.
+acme_sh_list_domains: True
+
+# When set to False, it will use the live Let's Encrypt servers, so please make
+# sure everything works with staging True or you may find yourself rate limited.
+#
+# It is worth mentioning you'll need to force issue a new certificate when
+# swiching between staging and live or vice versa.
+acme_sh_default_staging: False
+
+# When set to True, this will regenerate a new certificate even if your list of
+# domains didn't change. It's also used to set a new DNS provider and API keys.
+#
+# Be careful with this because you may get rate limited if on the live server.
+# Only consider using this to update your DNS provider. You should set it back
+# to False when you're done.
+acme_sh_default_force_issue: False
+
+# When set to True, this will regenerate a new certificate for an existing list
+# of certificates. This will not update your DNS provider or API keys.
+#
+# This could be useful to use if your certificates expired. You should set it
+# back to False when you're done.
+acme_sh_default_force_renew: False
+
+# When set to True, this will provide more detailed information to STDOUT. This
+# could be useful if you're testing the role in staging mode.
+acme_sh_default_debug: False
+
+# Which DNS provider should you use?
+# A list of supported providers can be found at:
+#   https://github.com/Neilpang/acme.sh#7-automatic-dns-api-integration
+# As for getting the name to use, you can find that at:
+#   https://github.com/Neilpang/acme.sh/tree/master/dnsapi
+#
+# It defaults to DigitalOcean. Make sure to include the dns_ part of the name,
+# but leave off the .sh file extension.
+acme_sh_default_dns_provider: "dns_namecheap"
+
+# What are your DNS provider's API key(s)?
+# The key names to use can be found at:
+#   https://github.com/Neilpang/acme.sh/tree/master/dnsapi
+#
+# The API key can be created on your DNS provider's website. Some providers
+# require 1 key, while others require 2+. Just add them as key / value pairs here
+# without the "export ".
+#
+# For example if you were using DigitalOcean you would enter:
+#    acme_sh_default_dns_provider_api_keys:
+#      "DO_API_KEY": "THE_API_SECRET_TOKEN_FROM_THE_DO_DASHBOARD"
+acme_sh_default_dns_provider_api_keys: {
+  "NAMECHEAP_USERNAME": "{{ namecheap_username }}",
+  "NAMECHEAP_API_KEY": "{{ namecheap_api_key }}",
+  "NAMECHEAP_SOURCEIP": "{{ ansible_default_ipv4.address }}"
+}
+
+# How long should acme.sh sleep after attempting to set the TXT record to your
+# DNS records? Some DNS providers do not update as fast as others.
+#
+# 120 is the default value from acme.sh itself but keep in mind if you use
+# NameSilo, their DNS updates only propagate once per 15 minutes so you'll need
+# to set this value to 900 or you run the risk of getting a DNS NXDOMAIN error.
+#
+# I recommend keeping it set to 120 or higher if your DNS provider requires it.
+#
+# Although as an aside, I used 10 when testing this role against DigitalOcean
+# and it worked about 30 times in a row. Still, in production I would use 120
+# just to be safe because this 2 minute delay will only affect you on the first
+# Ansible run. After that it will be updated in the background through a cron job.
+acme_sh_default_dns_sleep: 120
+
+# When issuing new certificates, you can choose to add additional flags that
+# are not present here by default. Supply them just as you would on the command
+# line, such as "--help".
+acme_sh_default_extra_flags_issue: ""
+
+# When renewing certificates, you can choose to add additional flags that
+# are not present here by default. Supply them just as you would on the command
+# line, such as "--help".
+acme_sh_default_extra_flags_renew: ""
+
+# When installing certificates, you can choose to add additional flags that
+# are not present here by default. Supply them just as you would on the command
+# line, such as "--help".
+#
+# Installing is different than issuing and we'll cover that later.
+acme_sh_default_extra_flags_install_cert: ""
+
+# When a certificate is issued or renewed, acme.sh will attempt to run a command
+# of your choosing. This could be to restart or reload your web server or proxy.
+#
+# Keep in mind the user you set in acme_sh_become_user needs access rights to
+# sudo if you use sudo here, or if not, they need access rights to reload your
+# web server / proxy.
+#
+# For a Docker example, check the example section of this README.
+acme_sh_default_install_cert_reloadcmd: "systemctl reload dovecot; systemctl reload postfix"
+
+# If you need more fine grain control than the reloadcmd you can hook into the
+# life cycle of issuing or renewing a certificate. By default the following 3
+# options do nothing unless you fill them out. They are not needed for everything
+# to function as long as your reloadcmd works.
+#
+# When a certificate is issued or renewed, acme.sh will attempt to run a command
+# before attempting to issue a certificate. This can only be applied while
+# issuing a certificate but it will be saved and used for renewing as well.
+#
+# This will execute even if the certificate wasn't successfully issued / renewed.
+acme_sh_default_issue_pre_hook: ""
+
+# When a certificate is issued or renewed, acme.sh will attempt to run a command
+# after attempting to issue a certificate. This can only be applied while
+# issuing a certificate but it will be saved and used for renewing as well.
+#
+# This will execute even if the certificate wasn't successfully issued / renewed.
+acme_sh_default_issue_post_hook: ""
+
+# When a certificate is issued or renewed, acme.sh will attempt to run a command
+# after a certificate is successfully renewed. This can only be applied while
+# issuing a certificate but it will be saved and used for renewing as well.
+#
+# This will only execute if the certificate was successfully issued / renewed.
+acme_sh_default_issue_renew_hook: ""
+
+# When set to True, certificates will be removed and unset from being renewed
+# instead of being created and set for renewal. This will not uninstall acme.sh.
+acme_sh_default_remove: False
+
+# This list contains a list of domains, along with key / value pairs to
+# configure each set of domains individually.
+#
+# Here's an example with every available option documented, and a couple of real
+# examples will also be included in the example section of this README:
+acme_sh_domains:
+#  A list of 1 or more domains, you can use ["example.com", "*.example.com"] or
+#  ["*.example.com", "example.com"] for setting a wildcard certificate along with
+#  the root domain certificate in the same file. The first domain in the list
+#  will end up being used as the base file name for the certificate name.
+#
+#  If you want separate files then create a new "domains:" item in the list.
+  - domains: ["{{ mail_fqdn }}", "{{ imap_fqdn }}", "{{ smtp_fqdn }}"]
+#    # Optionally override the default staging variable. This overall pattern lets
+#    # you situationally override the defaults listed above for each domain list.
+#    staging: False
+#    # Optionally force issue new certificates.
+#    force_issue: False
+#    # Optionally force renew certificates.
+#    force_renew: False
+#    # Optionally turn on debug mode.
+#    debug: True
+#    # Optionally override the default DNS provider.
+#    dns_provider: "dns_namesilo"
+#    # Optionally override the default DNS API keys.
+#    dns_provider_api_keys:
+#     "Namesilo_Key": "THE_API_SECRET_TOKEN_FROM_THE_NAMESILO_DASHBOARD"
+#    # Optionally override the default DNS sleep time.
+#    dns_sleep: 900
+#    # Optionally add extra flags to any of these 3 actions:
+#    extra_flags_issue: ""
+#    extra_flags_renew: ""
+#    extra_flags_install_cert: ""
+#    # Optionally set a different reload command.
+#    install_cert_reloadcmd: "whoami"
+#    # Optionally run commands during different points in the cert issue process:
+#    extra_issue_pre_hook: ""
+#    extra_issue_post_hook: ""
+#    extra_issue_renew_hook: ""
+#    # Optionally remove and disable the certificate.
+#    remove: True

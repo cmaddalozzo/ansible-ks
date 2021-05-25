@@ -1,0 +1,91 @@
+---
+# Tasks file for postfix
+
+- name: Install packages
+  apt:
+    state: latest
+    pkg:
+      - postfix
+      - postfix-mysql
+    update_cache: yes
+
+- name: Delete default config
+  file:
+    state: absent
+    path: /etc/postfix/sasl/
+
+- name: Template main.cf
+  template:
+    src: templates/main.j2
+    dest: /etc/postfix/main.cf
+
+- name: Copy master.cf
+  copy:
+    src: files/master.cf
+    dest: /etc/postfix/master.cf
+
+- name: Create directory for sql config
+  file:
+    path: /etc/postfix/sql
+    state: directory
+    mode: "0640"
+
+- name: Template accounts.cf
+  template:
+    src: templates/sql/accounts.jq
+    dest: /etc/postfix/sql/accounts.cf
+    mode: "0640"
+
+- name: Template aliases.cf
+  template:
+    src: templates/sql/aliases.jq
+    dest: /etc/postfix/sql/aliases.cf
+    mode: "0640"
+
+- name: Template domains.cf
+  template:
+    src: templates/sql/domains.jq
+    dest: /etc/postfix/sql/domains.cf
+    mode: "0640"
+
+- name: Template recipient-access.cf
+  template:
+    src: templates/sql/recipient-access.jq
+    dest: /etc/postfix/sql/recipient-access.cf
+    mode: "0640"
+
+- name: Template sender-login-maps.cf
+  template:
+    src: templates/sql/sender-login-maps.jq
+    dest: /etc/postfix/sql/sender-login-maps.cf
+    mode: "0640"
+
+- name: Template tls-policy.cf
+  template:
+    src: templates/sql/tls-policy.jq
+    dest: /etc/postfix/sql/tls-policy.cf
+    mode: "0640"
+
+- name: Copy postscreen_access
+  copy:
+    src: files/postscreen_access
+    dest: /etc/postfix/postscreen_access
+
+- name: Copy without_ptr
+  copy:
+    src: files/without_ptr
+    dest: /etc/postfix/without_ptr
+
+- name: Copy submission_header_cleanup
+  copy:
+    src: files/submission_header_cleanup
+    dest: /etc/postfix/submission_header_cleanup
+
+- name: Create postmap
+  command: postmap /etc/postfix/without_ptr
+
+- name: Newaliases
+  command: newaliases
+
+- name: Reload Postfix
+  command: systemctl reload postfix

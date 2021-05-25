@@ -1,0 +1,34 @@
+---
+# Firewall tasks
+# @see /etc/ufw/applications.d
+- name: Install fail2ban
+  apt:
+    pkg:
+      - fail2ban
+    state: latest
+  tags: fail2ban
+
+- name: Enable SSH access
+  community.general.ufw:
+    rule: allow
+    app: OpenSSH
+
+- name: Enable SMTP access
+  community.general.ufw:
+    rule: allow
+    app: Postfix
+
+- name: Enable Postfix Submission access
+  community.general.ufw:
+    rule: allow
+    app: Postfix Submission
+
+- name: Enable Dovecot (IMAPS) access
+  community.general.ufw:
+    rule: allow
+    app: Dovecot Secure IMAP
+
+- name: Deny everything and enable UFW
+  community.general.ufw:
+    state: enabled
+    policy: deny

@@ -1,0 +1,12 @@
+---
+# Group vars for all hosts
+
+host: dazzler
+domain: maddalozzo.ca
+ip_address: "{{ ansible_default_ipv4.address }}"
+mail_fqdn: "mail.{{ domain }}"
+smtp_fqdn: "smtp.{{ domain }}"
+imap_fqdn: imap.{{ domain }}
+mail_user: mail
+namecheap_username: emelpy
+email_for_updates: "{{ mail_user }}@{{ domain }}"

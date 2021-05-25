@@ -1,0 +1,17 @@
+---
+# This is the top-level playbook
+
+- hosts: all
+  become: yes
+  roles:
+    - { role: "ssh", tags: ["ssh"] }
+    - { role: "general", tags: ["general"] }
+    - { role: "dns", tags: ["dns"] }
+    - { role: "nickjj.acme_sh", tags: ["certs"] }
+    - { role: "mariadb", tags: ["db"] }
+    - { role: "redis", tags: ["redis"] }
+    - { role: "dovecot", tags: ["dovecot"] }
+    - { role: "rspamd", tags:  ["rspamd"] }
+    - { role: "postfix", tags: ["postfix"] }
+    - { role: "accounts", tags: ["accounts"] }
+    - { role: "firewall", tags: ["firewall"] }

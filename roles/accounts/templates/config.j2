@@ -1,0 +1,4 @@
+use vmail;
+insert ignore into domains (domain) values ('{{ domain }}');
+insert ignore into accounts (username, domain, password, quota, enabled, sendonly) values ('{{ mail_user }}', '{{ domain }}', '{{ mail_user_hash_output.stdout }}', 2048, true, false);
+insert ignore into aliases (source_username, source_domain, destination_username, destination_domain, enabled) values ('alias', '{{ domain }}', '{{ mail_user }}', '{{ domain }}', true);

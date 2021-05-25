@@ -1,0 +1,42 @@
+---
+# Tasks file for mariadb
+
+- name: Install packages
+  apt:
+    state: latest
+    pkg:
+      - mariadb-server
+    update_cache: yes
+
+- name: Make sure pymysql is present
+  pip:
+    name: pymysql
+    state: present
+
+- name: Create user vmail
+  community.mysql.mysql_user:
+    name: vmail
+    login_user: root
+    password: "{{ vmail_pass }}"
+    priv: 'vmail.*:SELECT'
+    state: present
+
+- name: Create vmail database
+  community.mysql.mysql_db:
+    name: vmail
+    login_user: root
+    encoding: utf8
+    state: present
+
+- name: Copy database schema file
+  copy:
+    src: files/schema.sql
+    dest: /tmp
+  tags: mysql
+
+- name: Import database schema
+  community.mysql.mysql_db:
+    name: vmail
+    login_user: root
+    state: import
+    target: /tmp/schema.sql
